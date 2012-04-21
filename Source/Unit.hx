@@ -24,8 +24,11 @@ class Unit
 
 	public var flags : Int;
 	public var collided_tile : Vec2;
+	public var collided_object : Unit;
 
 	public static var GAMEOBJECT_CHECKTILE = 0x1;
+	public static var GAMEOBJECT_CHECKOBJECTS = 0x2;
+	public static var GAMEOBJECT_AUTOPUSH = 0x4;     // automatically push out objects
 
 	public function new()
 	{
@@ -36,7 +39,8 @@ class Unit
 		bounds = new MRect();
 		collided_tile = new Vec2();
 		target_pos = new Vec2();
-		flags = Unit.GAMEOBJECT_CHECKTILE;
+		flags = Unit.GAMEOBJECT_CHECKTILE | Unit.GAMEOBJECT_CHECKOBJECTS | Unit.GAMEOBJECT_AUTOPUSH;
+		collided_object = null;
 
 		bounds.x = -5;
 		bounds.y = -5;
@@ -45,10 +49,16 @@ class Unit
 
 		mainSprite = new Sprite();
 
-		mainSprite.graphics.beginFill(Std.int (0xFF0000));
-		mainSprite.graphics.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+		draw();
 
 		setPosition(100,100);
+	}
+
+	public function draw()
+	{
+		mainSprite.graphics.clear();
+		mainSprite.graphics.beginFill(Std.int (0xFF0000));
+		mainSprite.graphics.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
 	}
 
 	public function setPosition(x : Int, y : Int)

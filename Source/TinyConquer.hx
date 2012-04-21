@@ -35,6 +35,11 @@ class TinyConquer extends Sprite {
 
 		mouseDown = false;
 		playField.createUnit();
+		playField.createUnit();
+		playField.createUnit();
+
+		playField.units[2].bounds.width = 100;
+		playField.units[2].draw();
 
 		Lib.current.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		Lib.current.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);

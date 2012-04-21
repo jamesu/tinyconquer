@@ -178,8 +178,131 @@ class PlayField extends Sprite {
 	public function testObjectCollision()
 	{
 		var unit;
+
+		// Clear previous
 		for (unit in units) {
+			unit.collided_object = null;
 		}
+
+		// Test everything
+		for (unit in units) {
+	        // Skip non-colliding objects
+	        if ((unit.flags & Unit.GAMEOBJECT_CHECKOBJECTS) == 0)
+	            continue;
+	        
+	        // Skip collisions which have already been determined
+	        if (unit.collided_object != null)
+	            continue;
+
+            var ourLeft = unit.pos.x + unit.bounds.x;
+            var ourTop = unit.pos.y + unit.bounds.y;
+            var ourRight = ourLeft + unit.bounds.width;
+            var ourBottom = ourTop + unit.bounds.height;
+	        
+	        var unit2;
+			for (unit2 in units) {
+	            // Skip non-colliding objects
+	            if ((unit2.flags & Unit.GAMEOBJECT_CHECKOBJECTS) == 0)
+	                continue;
+	            
+	            // Skip self (duh)
+	            if (unit == unit2)
+	                continue;
+	            
+	            // Skip collisions which have already been determined and thus resolved
+	            if (unit2.collided_object != null)
+	                continue;
+
+	            var theirLeft = unit2.pos.x + unit2.bounds.x;
+	            var theirTop = unit2.pos.y + unit2.bounds.y;
+	            var theirRight = theirLeft + unit2.bounds.width;
+	            var theirBottom = theirTop + unit2.bounds.height;
+	            
+	            // Ok test the bounding rectangles
+	            if (testRectIntersects(ourLeft, ourTop,
+	                                   unit.bounds.width, unit.bounds.height,
+	                                   theirLeft, theirTop,
+	                                   unit2.bounds.width, unit2.bounds.height)) {
+	                // Yup
+	                unit.collided_object = unit2;
+
+	                // Resolve this collision
+	                if (unit.flags & Unit.GAMEOBJECT_AUTOPUSH != 0)
+		            {
+		            	var deltaX: Int = null;
+		            	var deltaY: Int = null;
+
+		            	// Did we move? In which case push back on the closest edge
+		            	if (unit.vel.x != 0) {
+
+		            		//trace('tr=' + (theirRight - ourLeft) + 'tl=' + (ourRight - theirLeft));           		
+			                if (theirRight - ourLeft < ourRight - theirLeft) {
+			                	deltaX = (theirRight - ourLeft) + 1;
+			                } else {
+			                	deltaX = (theirLeft - ourRight) - 1;
+			                }
+
+			                // See if we got out
+			                if (!testRectIntersects(ourLeft + deltaX, ourTop,
+	                                   unit.bounds.width, unit.bounds.height,
+	                                   theirLeft, theirTop,
+	                                   unit2.bounds.width, unit2.bounds.height)) {
+			                	//deltaX = deltaX;
+			                } else {
+			                	deltaX = null;
+			                }
+		            	}
+
+		            	if (unit.vel.y != 0) { 
+			                if (theirBottom - ourTop < theirBottom - theirTop) {
+			                	//trace("1");
+			                	deltaY = (theirBottom - ourTop) + 1;
+			                } else {
+			                	//trace("2");
+			                	deltaY = (theirTop - ourBottom) - 0;
+			                }
+
+			                // See if we got out
+			                if (!testRectIntersects(ourLeft, ourTop + deltaY,
+	                                   unit.bounds.width, unit.bounds.height,
+	                                   theirLeft, theirTop,
+	                                   unit2.bounds.width, unit2.bounds.height)) {
+			                	//deltaY = deltaY;
+			                	//trace("still??");
+			                } else {
+			                	deltaY = null;
+			                }
+		            	}
+
+
+		            	//trace("Sanity check begin: " + deltaX + ',' + deltaY + ':' + unit.bounds.width + ',' + unit.bounds.height);
+
+		            	// Figure out quickest REALISTIC way of getting out
+		            	if (deltaX < -unit.bounds.width/2 || deltaX > unit.bounds.width/2)
+		            		deltaX = null;
+		            	if (deltaY < -unit.bounds.height/2 || deltaY > unit.bounds.height/2)
+		            		deltaY = null;
+
+		            	//trace("Sanity check: " + deltaX + ',' + deltaY);
+
+		            	if (deltaX != null && ((deltaX < deltaY) || deltaY == null)) {
+		            		unit.vel.x += deltaX;
+		            	} else if (deltaY != null && ((deltaY < deltaX) || deltaX == null)) {
+		            		unit.vel.y += deltaY;
+		            	}
+	                }
+
+	                // If the other unit won't be moving, resolve its object collision
+		            if (unit2.flags & Unit.GAMEOBJECT_AUTOPUSH == 0)
+		            	unit2.collided_object = unit;
+
+	                //trace("Collision between", unit, unit2);
+	                
+	                break;
+	            }
+	            
+	        }
+    	}
 	}
 
 	public function testTileCollision()
@@ -207,7 +330,6 @@ class PlayField extends Sprite {
 	        
 	        // Check x 
 	        if (final_x != 0) {
-	        	trace("FINAL_x != 0 ==" + final_x);
 	            var tile_at_x = -1;
 	            var tile_at = new Vec2();
 	            
@@ -217,7 +339,7 @@ class PlayField extends Sprite {
 	                tile_at_x = tileAtPosition(Math.floor(unit.pos.x + (unit.bounds.x) + final_x), unit.pos.y, tile_at);
 	            
 	            markTileX = Math.floor(tile_at.x) + Math.floor(tile_at.y * tileWidth);
-	            trace(unit.pos.y + "|" + markTileX + ',' + tile_at.x + ',' + tile_at.y);
+	            //trace(unit.pos.y + "|" + markTileX + ',' + tile_at.x + ',' + tile_at.y);
 
 	            var txdat = tile_at_x < 0 ? tileData[1] : tileData[tile_at_x];
 	            switch (txdat.flags) {
@@ -245,7 +367,6 @@ class PlayField extends Sprite {
 	        
 	        // Check y (note: to fix the "cant move down" bug we need to test against left AND right
 	        if (final_y != 0) {
-	        	trace("FINAL_y != 0" + '=' + final_y);
 	            var tile_at_y = -1;
 	            var tile_at = new Vec2();
 	            
@@ -362,13 +483,14 @@ class PlayField extends Sprite {
 	    return tiles[(tile_y * tileWidth) + tile_x];
 	}
 
-	public function testRectIntersects(rect1 : MRect, rect2 : MRect) : Bool
+	public function testRectIntersects(rect1_x : Int, rect1_y: Int, rect1_width : Int, rect1_height : Int,
+		                               rect2_x : Int, rect2_y: Int, rect2_width : Int, rect2_height : Int) : Bool
 	{
-	    var bl_x = Math.min(rect1.x + rect1.width - 1, rect2.x + rect2.width - 1);
-	    var bl_y = Math.min(rect1.y + rect1.height - 1, rect2.y + rect2.height - 1);
+	    var bl_x = Math.min(rect1_x + rect1_width - 1, rect2_x + rect2_width - 1);
+	    var bl_y = Math.min(rect1_y + rect1_height - 1, rect2_y + rect2_height - 1);
 	    
-	    var newPos_x = Math.max(rect1.x, rect2.x);
-	    var newPos_y = Math.max(rect1.y, rect2.y);
+	    var newPos_x = Math.max(rect1_x, rect2_x);
+	    var newPos_y = Math.max(rect1_y, rect2_y);
 	    
 	    var newExtent_x = bl_x - newPos_x + 1;
 	    var newExtent_y = bl_y - newPos_y + 1;
@@ -388,6 +510,9 @@ class PlayField extends Sprite {
 
 	public function createUnit() : Unit {
 		var unit = new Unit();
+
+		unit.setPosition(10 + Math.floor(Math.random()*100), 10 + Math.floor(Math.random()*100) );
+
 		unit.addToScene(this);
 		units.push(unit);
 
