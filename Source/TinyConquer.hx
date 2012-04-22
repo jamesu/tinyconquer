@@ -38,9 +38,6 @@ class TinyConquer extends Sprite {
 		playField.createUnit();
 		playField.createUnit();
 
-		playField.units[2].bounds.width = 100;
-		playField.units[2].draw();
-
 		Lib.current.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		Lib.current.stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 		Lib.current.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
@@ -59,8 +56,9 @@ class TinyConquer extends Sprite {
 
 	private function moveUnitToPos(x : Int, y : Int) : Void {
 		//trace("Please try other APIs by yourself!");
-		playField.units[0].target_pos.x = x;
-		playField.units[0].target_pos.y = y;
+		var unit = playField.units[0];
+
+		unit.moveToPosition(x, y);
 	}
 
 	private function onMouseMove(e:MouseEvent) : Void {
