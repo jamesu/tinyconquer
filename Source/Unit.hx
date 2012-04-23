@@ -23,8 +23,10 @@ class Unit
 
 	// Rotation
 	public var rotationSpeed : Int;
+	public var targetRotation : Int;
 	public var turretRotationSpeed : Int;
 	public var rotation : Int;
+	public var targetTurretRotation : Int;
 	public var turretRotation : Int;
 
 	public var target_pos : Vec2;
@@ -64,8 +66,10 @@ class Unit
 		mainSprite = null;
 
 		rotation = 0;
+		targetRotation = 0;
 		turretRotation = 0;
 		rotationSpeed = 1;
+		targetTurretRotation = 0;
 		turretRotationSpeed = 1;
 
 		type = aType;

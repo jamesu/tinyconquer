@@ -472,18 +472,32 @@ class PlayField extends Sprite {
                     //
                     //        | 0
                     //        
-					var angle = (Math.atan2(deltaTargetX, deltaTargetY) * M_DEG_RAD) + 180.0;
+					var angle = (Math.atan2(deltaTargetX, -deltaTargetY) * M_DEG_RAD) + 180.0;
 
-					trace("ANGLE == " + angle);
+					unit.targetRotation = Math.floor(angle);
+					var delta = (unit.rotation - unit.targetRotation);
+					if (delta < 2 && delta > -2)
+						unit.targetRotation = unit.rotation;
 
-				//1.0 / M_DEG_RAD;
-				unit.turret.rotation = 0.1;
+
+					//unit.mainSprite.rotation = angle;
+
+					//trace("ANGLE == " + angle);
 				}
 
-				unit.mainSprite.rotation += 0.2;
-
-
-				if (deltaLen > 1) {
+				if (unit.rotation != unit.targetRotation) {
+					// First rotate to the desired direction
+					var delta = (unit.rotation - unit.targetRotation);
+					if (delta < unit.rotationSpeed && delta > -unit.rotationSpeed)
+						unit.rotation = unit.targetRotation;
+					else if (delta > 0)
+						unit.rotation -= unit.rotationSpeed;
+					else if (delta < 0)
+						unit.rotation += unit.rotationSpeed;	
+					unit.mainSprite.rotation = unit.rotation + 0.01;
+					unit.turret.rotation = 0.1;
+				} else if (deltaLen > 1) {
+					// Now travel
 					var speed = deltaLen > 2 ? 2 : deltaLen;
 					unit.vel.x = Math.floor((deltaTargetX / deltaLen) * speed);
 					unit.vel.y = Math.floor((deltaTargetY / deltaLen) * speed);
