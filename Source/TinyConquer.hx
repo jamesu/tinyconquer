@@ -97,7 +97,9 @@ class TinyConquer extends Sprite {
 	}
 	
 	public static function main () {
+	#if js
 		JSTrace.setRedirection();
+	#end
 		instance = new TinyConquer();
 		Lib.current.addChild (instance);
 	}
